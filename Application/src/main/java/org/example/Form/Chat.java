@@ -83,7 +83,7 @@ public class Chat extends JFrame {
         sendButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                sendMessage();
+                initUser();
             }
         });
 
@@ -91,7 +91,7 @@ public class Chat extends JFrame {
         inputField.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                sendMessage();
+                initUser();
             }
         });
 
@@ -188,6 +188,15 @@ public class Chat extends JFrame {
         setVisible(true);
     }
 
+    private void initUser(){
+        String message = inputField.getText().trim();
+        if (!message.isEmpty() && !message.equals(((RoundedTextField) inputField).getPlaceholder())) {
+            this.name = message;
+            inputField.setText("");
+            inputField.requestFocus();
+            // Placeholder for secure message sending logic
+        }
+    }
     private void sendMessage() {
         String message = inputField.getText().trim();
         if (!message.isEmpty() && !message.equals(((RoundedTextField) inputField).getPlaceholder())) {
