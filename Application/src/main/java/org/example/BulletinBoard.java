@@ -1,15 +1,18 @@
 package org.example;
 
+import java.rmi.RemoteException;
+import java.rmi.server.UnicastRemoteObject;
 import java.util.HashMap;
 
-public class BulletinBoard {
+public class BulletinBoard extends UnicastRemoteObject implements IBulletinBoard{
     //2e hashmap <tag, value> voor makkelijk ophalen in get
     private HashMap<Integer, HashMap<String, String>> board = new HashMap<>();
     private final int size;
-    public BulletinBoard(int size){
+    public BulletinBoard(int size) throws RemoteException {
         this.size = size;
     }
-    public void add(int i, String value, String tag){
+    @Override
+    public synchronized void add(int i, String value, String tag) throws RemoteException {
         /*
             add(i, v, t): Add v,t to the set at cell i: B[i] := B[i] U {<v, t>}
          */
@@ -18,7 +21,9 @@ public class BulletinBoard {
         }
         board.get(i).put(tag, value);
     }
-    public String get(int i, String tag){
+
+    @Override
+    public synchronized String get(int i, String tag) throws RemoteException {
         /*
             get(i, b): Let t = Beta(b). If v,t B[i] for some value v, return
             v and remove v,t from B[i]. Otherwise return , and
@@ -31,5 +36,9 @@ public class BulletinBoard {
             return set.remove(tag);
         }
         return null;
+    }
+    @Override
+    public int getSize(){
+        return size;
     }
 }
