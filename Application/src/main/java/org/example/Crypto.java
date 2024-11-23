@@ -4,8 +4,13 @@ import javax.crypto.Cipher;
 import javax.crypto.Mac;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.security.*;
 import java.security.spec.ECGenParameterSpec;
+import java.security.spec.X509EncodedKeySpec;
 import java.util.Base64;
 
 public class Crypto {
@@ -41,5 +46,17 @@ public class Crypto {
         keyPairGenerator.initialize(ecGenParameterSpec);
         KeyPair keyPair = keyPairGenerator.generateKeyPair();
         return keyPair;
+    }
+
+    public static String EncodeBumpfile(PublicKey key){
+        return Base64.getEncoder().encodeToString(key.getEncoded());
+    }
+
+    public static PublicKey DecryptBumpfile(File file) throws Exception {
+        String fileContent = Files.readString(Path.of(file.getPath()));
+        byte[] pubKeyBytes = Base64.getDecoder().decode(fileContent);
+        X509EncodedKeySpec keySpec = new X509EncodedKeySpec(pubKeyBytes);
+        KeyFactory keyFactory = KeyFactory.getInstance("EC");
+        return keyFactory.generatePublic(keySpec);
     }
 }

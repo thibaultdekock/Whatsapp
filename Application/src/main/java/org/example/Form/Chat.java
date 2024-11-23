@@ -20,13 +20,15 @@ import java.awt.geom.RoundRectangle2D;
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.rmi.Naming;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
-import java.security.KeyPair;
-import java.security.NoSuchAlgorithmException;
-import java.security.PrivateKey;
-import java.security.PublicKey;
+import java.security.*;
+import java.security.spec.X509EncodedKeySpec;
+import java.util.Base64;
 
 public class Chat extends JFrame {
     private JTextArea chatArea;
@@ -39,6 +41,8 @@ public class Chat extends JFrame {
     private final IBulletinBoard board;
     private String name;
     boolean initialized = false;
+
+    private final String BUMPFILES_PATH = "./bumpfiles/";
 
     public Chat() throws Exception {
         InitializeLoginForm();
@@ -61,11 +65,14 @@ public class Chat extends JFrame {
 
         // clear the form
         getContentPane().removeAll();
-        //this.name = "jqs";
 
-        try(FileWriter fw = new FileWriter("./bumpfiles/bmp_"+this.name.toLowerCase()+".txt")){
-            fw.write(publicKey.getEncoded().toString());
+        // generate Bumpfile
+        try(FileWriter fw = new FileWriter(BUMPFILES_PATH+"bmp_"+this.name.toLowerCase()+".txt")){
+            fw.write(Crypto.EncodeBumpfile(publicKey));
         }
+
+        // get bumpfile
+        PublicKey k = Crypto.DecryptBumpfile(getBumpFile());
 
         InitializeChatForm();
     }
@@ -351,6 +358,19 @@ public class Chat extends JFrame {
         @Override
         public Dimension getPreferredSize() {
             return new Dimension(50, 30); // Adjust to your desired size
+        }
+    }
+
+    private File getBumpFile() throws Exception {
+        while (true){
+            File bumpfile = null;
+            for (File file: new File(BUMPFILES_PATH).listFiles()) {
+                String fileName = file.getName();
+                if(!fileName.substring(4, fileName.indexOf(".txt")).equals(name.toLowerCase())){
+                    return file;
+                }
+            }
+            Thread.sleep(1000);
         }
     }
 }
