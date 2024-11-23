@@ -1,5 +1,12 @@
 package org.example.Form;
 
+import org.example.BulletinBoard;
+import org.example.IBulletinBoard;
+
+import javax.crypto.Cipher;
+import javax.crypto.KeyGenerator;
+import javax.crypto.NoSuchPaddingException;
+import javax.crypto.SecretKey;
 import javax.swing.*;
 import javax.swing.border.AbstractBorder;
 import javax.swing.border.EmptyBorder;
@@ -9,18 +16,26 @@ import java.awt.event.ActionListener;
 import java.awt.geom.Area;
 import java.awt.geom.Rectangle2D;
 import java.awt.geom.RoundRectangle2D;
+import java.rmi.Naming;
+import java.rmi.registry.LocateRegistry;
+import java.rmi.registry.Registry;
+import java.security.NoSuchAlgorithmException;
 
 public class Chat extends JFrame {
     private JTextArea chatArea;
     private RoundedTextField inputField;
     private JButton sendButton;
 
-    private Boolean initialized = false;
-
+    private final IBulletinBoard board;
+    private final SecretKey key;
     private String name;
 
-    public Chat() {
-        InitializeLoginForm();
+    public Chat() throws Exception {
+        //InitializeLoginForm();
+        Registry registry = LocateRegistry.getRegistry("localhost", 1099);
+        board = (IBulletinBoard) registry.lookup("BulletinBoard");
+        assert board != null;
+        key = KeyGenerator.getInstance("AES").generateKey();
         // Handshake & get the name
         while (initialized == false) {
             try {
@@ -217,6 +232,10 @@ public class Chat extends JFrame {
             inputField.requestFocus();
             // Placeholder for secure message sending logic
         }
+    }
+
+    private void receiveMessage(){
+
     }
 
 
