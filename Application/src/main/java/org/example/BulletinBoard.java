@@ -38,7 +38,7 @@ public class BulletinBoard extends UnicastRemoteObject implements IBulletinBoard
         return null;
     }
     @Override
-    public int getSize(){
+    public int getSize() throws RemoteException{
         return size;
     }
 }
