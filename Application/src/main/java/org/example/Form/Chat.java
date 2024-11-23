@@ -1,8 +1,11 @@
 package org.example.Form;
 
+import org.example.Bump;
 import org.example.Crypto;
 import org.example.IBulletinBoard;
+import org.example.Message;
 
+import javax.crypto.SecretKey;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
@@ -10,6 +13,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.FileWriter;
+import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.security.*;
@@ -22,15 +26,14 @@ public class Chat extends JFrame {
 
     private PublicKey publicKey;
     private PrivateKey privateKey;
+    private SecretKey secretKey = null;
 
     private final IBulletinBoard board;
     private String name;
     private boolean initialized = false;
     private int index;
     private String tag;
-    private int otherIndex;
-    private String otherTag;
-    private PublicKey otherPublicKey;
+    private Bump bump;
 
     private final String BUMPFILES_PATH = "./bumpfiles/";
 
@@ -56,8 +59,8 @@ public class Chat extends JFrame {
         // clear the form
         getContentPane().removeAll();
 
-        tag = generateTag(40);
-        index = (int)(Math.random() * 100);
+        tag = generateTag();
+        index = generateIndex();
         // generate Bumpfile
         try(FileWriter fw = new FileWriter(BUMPFILES_PATH+"bmp_"+this.name.toLowerCase() + "$" + ((Integer)(index)).toString() + ".txt")){
             fw.write(Crypto.encodeBumpfile(publicKey, index, tag));
@@ -68,15 +71,10 @@ public class Chat extends JFrame {
         revalidate();
 
         // get bumpfile
-        String s= Crypto.decryptBumpfile(getBumpFile());
-        System.out.println(publicKey);
-        System.out.println("after");
+        bump = Crypto.decryptBumpfile(getBumpFile());
 
-        String[] data = s.split(" ");
-        otherPublicKey = Crypto.stringToPublicKey(data[0]);
-        otherIndex = Integer.parseInt(data[1]);
-        otherTag = data[2];
-        System.out.println(otherPublicKey);
+        //derive secretkey using the other's public key
+        secretKey = Crypto.deriveKey(secretKey, privateKey, bump.publicKey);
 
         // clear the form
         getContentPane().removeAll();
@@ -84,6 +82,19 @@ public class Chat extends JFrame {
         InitializeChatForm();
         repaint();
         revalidate();
+
+        //read incoming messages
+        Thread client = new Thread(() -> {
+            try {
+                while (true){
+                    receiveMessage();
+                    Thread.sleep(500);
+                }
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        });
+        client.start();
     }
 
     public void InitializeLoginForm() {
@@ -266,7 +277,11 @@ public class Chat extends JFrame {
         sendButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                sendMessage();
+                try {
+                    sendMessage();
+                } catch (Exception ex) {
+                    throw new RuntimeException(ex);
+                }
             }
         });
 
@@ -274,7 +289,11 @@ public class Chat extends JFrame {
         inputField.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                sendMessage();
+                try {
+                    sendMessage();
+                } catch (Exception ex) {
+                    throw new RuntimeException(ex);
+                }
             }
         });
 
@@ -296,18 +315,30 @@ public class Chat extends JFrame {
         }
         initialized = true;
     }
-    private void sendMessage() {
+    private void sendMessage() throws Exception {
         String message = inputField.getText().trim();
         if (!message.isEmpty() && !message.equals(((RoundedTextField) inputField).getPlaceholder())) {
             chatArea.append("You: " + message + "\n");
             inputField.setText("");
             inputField.requestFocus();
             // Placeholder for secure message sending logic
+            Message msg = new Message(message, index, tag);
+            String encryptedMsg = msg.encrypt(secretKey);
+            board.add(index, encryptedMsg, Crypto.hash(tag));
+            System.out.printf("%s sent msg: %s%n", name, message);
+            //TODO: Set new Index and tag and derive SecretKey again
         }
     }
 
-    private void receiveMessage(){
-
+    private void receiveMessage() throws Exception {
+        String msg = board.get(bump.index, bump.tag);
+        if(msg==null) return;
+        //Parse msg
+        Message decryptedMsg = Message.decrypt(msg, secretKey);
+        chatArea.append("Other: " + decryptedMsg.message + "\n");
+        System.out.printf("%s received msg: %s%n", name, decryptedMsg);
+        //TODO: Update bump-Index and bump-tag with the one out of the message
+        // and derive SecretKey again
     }
 
 
@@ -418,12 +449,15 @@ public class Chat extends JFrame {
         }
     }
 
-    private String generateTag(int length) {
+    private String generateTag() {
         Random random = new Random();
-        StringBuilder stringBuilder = new StringBuilder(length);
-        for (int i = 0; i < length; i++) {
+        StringBuilder stringBuilder = new StringBuilder(50);
+        for (int i = 0; i < 50; i++) {
             stringBuilder.append((char)random.nextInt(33, 126));
         }
         return stringBuilder.toString();
+    }
+    private int generateIndex() throws Exception {
+        return (int)(Math.random() * board.getSize());
     }
 }

@@ -12,7 +12,7 @@ public class BulletinBoard extends UnicastRemoteObject implements IBulletinBoard
         this.size = size;
     }
     @Override
-    public synchronized void add(int i, String value, String tag) throws RemoteException {
+    public synchronized void add(int i, String value, String tag) throws Exception {
         /*
             add(i, v, t): Add v,t to the set at cell i: B[i] := B[i] U {<v, t>}
          */
@@ -20,10 +20,11 @@ public class BulletinBoard extends UnicastRemoteObject implements IBulletinBoard
             board.put(i, new HashMap<>());
         }
         board.get(i).put(tag, value);
+        int d = 0;
     }
 
     @Override
-    public synchronized String get(int i, String tag) throws RemoteException {
+    public synchronized String get(int i, String tag) throws Exception {
         /*
             get(i, b): Let t = Beta(b). If v,t B[i] for some value v, return
             v and remove v,t from B[i]. Otherwise return , and
@@ -31,14 +32,15 @@ public class BulletinBoard extends UnicastRemoteObject implements IBulletinBoard
 
             let tag = Beta(b) buitenaf doen tag meegeven als parameter.
          */
+        String hashedTag = Crypto.hash(tag);
         HashMap<String, String> set = board.get(i);
-        if(set != null && set.containsKey(tag)){
-            return set.remove(tag);
+        if(set != null && set.containsKey(hashedTag)){
+            return set.remove(hashedTag);
         }
         return null;
     }
     @Override
-    public int getSize() throws RemoteException{
+    public int getSize() throws Exception{
         return size;
     }
 }
