@@ -48,7 +48,8 @@ public class Chat extends JFrame {
 
         // clear the form
         getContentPane().removeAll();
-        this.name = "Alice";
+
+
         InitializeChatForm();
     }
 
@@ -111,7 +112,6 @@ public class Chat extends JFrame {
         sendButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                initialized = true;
                 initUser();
             }
         });
@@ -225,6 +225,7 @@ public class Chat extends JFrame {
             inputField.requestFocus();
             // Placeholder for secure message sending logic
         }
+        initialized = true;
     }
     private void sendMessage() {
         String message = inputField.getText().trim();
