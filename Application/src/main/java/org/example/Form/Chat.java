@@ -29,9 +29,10 @@ public class Chat extends JFrame {
     private final IBulletinBoard board;
     private final SecretKey key;
     private String name;
+    boolean initialized = false;
 
     public Chat() throws Exception {
-        //InitializeLoginForm();
+        InitializeLoginForm();
         Registry registry = LocateRegistry.getRegistry("localhost", 1099);
         board = (IBulletinBoard) registry.lookup("BulletinBoard");
         assert board != null;
@@ -44,6 +45,7 @@ public class Chat extends JFrame {
                 e.printStackTrace();
             }
         }
+
         // clear the form
         getContentPane().removeAll();
         this.name = "Alice";
