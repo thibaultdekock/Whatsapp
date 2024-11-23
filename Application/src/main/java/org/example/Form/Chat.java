@@ -1,34 +1,19 @@
 package org.example.Form;
 
-import org.example.BulletinBoard;
 import org.example.Crypto;
 import org.example.IBulletinBoard;
 
-import javax.crypto.Cipher;
-import javax.crypto.KeyGenerator;
-import javax.crypto.NoSuchPaddingException;
-import javax.crypto.SecretKey;
 import javax.swing.*;
-import javax.swing.border.AbstractBorder;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.geom.Area;
-import java.awt.geom.Rectangle2D;
-import java.awt.geom.RoundRectangle2D;
 import java.io.File;
-import java.io.FileReader;
 import java.io.FileWriter;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.rmi.Naming;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.security.*;
-import java.security.spec.X509EncodedKeySpec;
-import java.util.Base64;
+import java.util.Random;
 
 public class Chat extends JFrame {
     private JTextArea chatArea;
@@ -41,6 +26,11 @@ public class Chat extends JFrame {
     private final IBulletinBoard board;
     private String name;
     private boolean initialized = false;
+    private int index;
+    private String tag;
+    private int otherIndex;
+    private String otherTag;
+    private PublicKey otherPublicKey;
 
     private final String BUMPFILES_PATH = "./bumpfiles/";
 
@@ -66,10 +56,11 @@ public class Chat extends JFrame {
         // clear the form
         getContentPane().removeAll();
 
-
+        tag = generateTag(40);
+        index = (int)(Math.random() * 100);
         // generate Bumpfile
-        try(FileWriter fw = new FileWriter(BUMPFILES_PATH+"bmp_"+this.name.toLowerCase() + "$" + ((Integer)((int) (Math.random() * 1000))).toString() +".txt")){
-            fw.write(Crypto.EncodeBumpfile(publicKey));
+        try(FileWriter fw = new FileWriter(BUMPFILES_PATH+"bmp_"+this.name.toLowerCase() + "$" + ((Integer)(index)).toString() + ".txt")){
+            fw.write(Crypto.encodeBumpfile(publicKey, index, tag));
         }
 
         InitializeWaitForm();
@@ -77,7 +68,15 @@ public class Chat extends JFrame {
         revalidate();
 
         // get bumpfile
-        PublicKey k = Crypto.DecryptBumpfile(getBumpFile());
+        String s= Crypto.decryptBumpfile(getBumpFile());
+        System.out.println(publicKey);
+        System.out.println("after");
+
+        String[] data = s.split(" ");
+        otherPublicKey = Crypto.stringToPublicKey(data[0]);
+        otherIndex = Integer.parseInt(data[1]);
+        otherTag = data[2];
+        System.out.println(otherPublicKey);
 
         // clear the form
         getContentPane().removeAll();
@@ -409,7 +408,6 @@ public class Chat extends JFrame {
 
     private File getBumpFile() throws Exception {
         while (true){
-            File bumpfile = null;
             for (File file: new File(BUMPFILES_PATH).listFiles()) {
                 String fileName = file.getName();
                 if(!fileName.substring(4, fileName.indexOf("$")).equals(name.toLowerCase())){
@@ -418,5 +416,14 @@ public class Chat extends JFrame {
             }
             Thread.sleep(1000);
         }
+    }
+
+    private String generateTag(int length) {
+        Random random = new Random();
+        StringBuilder stringBuilder = new StringBuilder(length);
+        for (int i = 0; i < length; i++) {
+            stringBuilder.append((char)random.nextInt(33, 126));
+        }
+        return stringBuilder.toString();
     }
 }

@@ -5,7 +5,7 @@ import javax.crypto.Mac;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 import java.io.File;
-import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.*;
@@ -48,14 +48,19 @@ public class Crypto {
         return keyPair;
     }
 
-    public static String EncodeBumpfile(PublicKey key){
-        return Base64.getEncoder().encodeToString(key.getEncoded());
+    public static String encodeBumpfile(PublicKey key, int index, String tag){
+        String encodedKey = Base64.getEncoder().encodeToString(key.getEncoded());
+        return Base64.getEncoder().encodeToString((encodedKey + " " + index + " " + tag).getBytes(StandardCharsets.UTF_8));
     }
 
-    public static PublicKey DecryptBumpfile(File file) throws Exception {
+    public static String decryptBumpfile(File file) throws Exception {
         String fileContent = Files.readString(Path.of(file.getPath()));
-        byte[] pubKeyBytes = Base64.getDecoder().decode(fileContent);
-        X509EncodedKeySpec keySpec = new X509EncodedKeySpec(pubKeyBytes);
+        return new String(Base64.getDecoder().decode(fileContent), StandardCharsets.UTF_8);
+    }
+
+    public static PublicKey stringToPublicKey(String key) throws Exception {
+        byte[] decodedKey = Base64.getDecoder().decode(key);
+        X509EncodedKeySpec keySpec = new X509EncodedKeySpec(decodedKey);
         KeyFactory keyFactory = KeyFactory.getInstance("EC");
         return keyFactory.generatePublic(keySpec);
     }
