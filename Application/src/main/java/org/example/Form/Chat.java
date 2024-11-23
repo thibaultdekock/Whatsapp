@@ -71,10 +71,19 @@ public class Chat extends JFrame {
             fw.write(Crypto.EncodeBumpfile(publicKey));
         }
 
+        InitializeWaitForm();
+        repaint();
+        revalidate();
+
         // get bumpfile
         PublicKey k = Crypto.DecryptBumpfile(getBumpFile());
 
+        // clear the form
+        getContentPane().removeAll();
+
         InitializeChatForm();
+        repaint();
+        revalidate();
     }
 
     public void InitializeLoginForm() {
@@ -151,6 +160,42 @@ public class Chat extends JFrame {
         // Add components to the main frame
         add(headerPanel, BorderLayout.NORTH);
         add(inputPanel, BorderLayout.CENTER);
+
+        setVisible(true);
+    }
+    public void InitializeWaitForm(){
+        // Set up the frame
+        setTitle("Chat App");
+        setSize(350, 400);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setLayout(new BorderLayout());
+        getContentPane().setBackground(Color.WHITE);
+
+        // Header Panel
+        JPanel headerPanel = new JPanel(new BorderLayout());
+        headerPanel.setBackground(new Color(63, 81, 181)); // Blue background color
+        headerPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
+
+        // Title and status
+        JLabel title = new JLabel("Welcome, " + this.name + "!");
+        title.setForeground(Color.WHITE);
+        title.setFont(new Font("Arial", Font.BOLD, 18));
+
+        JLabel status = new JLabel("We wait for a connection to be made..", JLabel.LEFT);
+        status.setForeground(new Color(200, 255, 200));
+        status.setFont(new Font("Arial", Font.PLAIN, 12));
+
+        JPanel titlePanel = new JPanel(new BorderLayout());
+        titlePanel.setBackground(new Color(63, 81, 181));
+        titlePanel.add(title, BorderLayout.NORTH);
+        titlePanel.add(status, BorderLayout.SOUTH);
+
+        headerPanel.add(titlePanel, BorderLayout.CENTER);
+
+        // Add components to the main frame
+        add(headerPanel, BorderLayout.NORTH);
+        //add(scrollPane, BorderLayout.CENTER);
+        //add(inputPanel, BorderLayout.SOUTH);
 
         setVisible(true);
     }
