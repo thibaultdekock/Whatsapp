@@ -15,11 +15,22 @@ public class Chat extends JFrame {
     private RoundedTextField inputField;
     private JButton sendButton;
 
+    private Boolean initialized = false;
+
     private String name;
 
     public Chat() {
-        //InitializeLoginForm();
+        InitializeLoginForm();
         // Handshake & get the name
+        while (initialized == false) {
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+        // clear the form
+        getContentPane().removeAll();
         this.name = "Alice";
         InitializeChatForm();
     }
@@ -83,6 +94,7 @@ public class Chat extends JFrame {
         sendButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                initialized = true;
                 initUser();
             }
         });
