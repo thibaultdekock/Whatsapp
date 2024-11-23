@@ -40,7 +40,7 @@ public class Chat extends JFrame {
 
     private final IBulletinBoard board;
     private String name;
-    boolean initialized = false;
+    private boolean initialized = false;
 
     private final String BUMPFILES_PATH = "./bumpfiles/";
 
@@ -66,8 +66,9 @@ public class Chat extends JFrame {
         // clear the form
         getContentPane().removeAll();
 
+
         // generate Bumpfile
-        try(FileWriter fw = new FileWriter(BUMPFILES_PATH+"bmp_"+this.name.toLowerCase()+".txt")){
+        try(FileWriter fw = new FileWriter(BUMPFILES_PATH+"bmp_"+this.name.toLowerCase() + "$" + ((Integer)((int) (Math.random() * 1000))).toString() +".txt")){
             fw.write(Crypto.EncodeBumpfile(publicKey));
         }
 
@@ -411,7 +412,7 @@ public class Chat extends JFrame {
             File bumpfile = null;
             for (File file: new File(BUMPFILES_PATH).listFiles()) {
                 String fileName = file.getName();
-                if(!fileName.substring(4, fileName.indexOf(".txt")).equals(name.toLowerCase())){
+                if(!fileName.substring(4, fileName.indexOf("$")).equals(name.toLowerCase())){
                     return file;
                 }
             }
