@@ -1,6 +1,7 @@
 package org.example.Form;
 
 import org.example.BulletinBoard;
+import org.example.Crypto;
 import org.example.IBulletinBoard;
 
 import javax.crypto.Cipher;
@@ -16,18 +17,26 @@ import java.awt.event.ActionListener;
 import java.awt.geom.Area;
 import java.awt.geom.Rectangle2D;
 import java.awt.geom.RoundRectangle2D;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.rmi.Naming;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
+import java.security.KeyPair;
 import java.security.NoSuchAlgorithmException;
+import java.security.PrivateKey;
+import java.security.PublicKey;
 
 public class Chat extends JFrame {
     private JTextArea chatArea;
     private RoundedTextField inputField;
     private JButton sendButton;
 
+    private PublicKey publicKey;
+    private PrivateKey privateKey;
+
     private final IBulletinBoard board;
-    private final SecretKey key;
     private String name;
     boolean initialized = false;
 
@@ -36,7 +45,11 @@ public class Chat extends JFrame {
         Registry registry = LocateRegistry.getRegistry("localhost", 1099);
         board = (IBulletinBoard) registry.lookup("BulletinBoard");
         assert board != null;
-        key = KeyGenerator.getInstance("AES").generateKey();
+
+        KeyPair keyPair = Crypto.generateKeys();
+        publicKey = keyPair.getPublic();
+        privateKey = keyPair.getPrivate();
+
         // Handshake & get the name
         while (initialized == false) {
             try {
@@ -48,7 +61,11 @@ public class Chat extends JFrame {
 
         // clear the form
         getContentPane().removeAll();
+        //this.name = "jqs";
 
+        try(FileWriter fw = new FileWriter("./bumpfiles/bmp_"+this.name.toLowerCase()+".txt")){
+            fw.write(publicKey.getEncoded().toString());
+        }
 
         InitializeChatForm();
     }

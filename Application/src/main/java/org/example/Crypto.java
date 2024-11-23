@@ -4,7 +4,8 @@ import javax.crypto.Cipher;
 import javax.crypto.Mac;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
-import java.security.MessageDigest;
+import java.security.*;
+import java.security.spec.ECGenParameterSpec;
 import java.util.Base64;
 
 public class Crypto {
@@ -31,5 +32,14 @@ public class Crypto {
         MessageDigest digest = MessageDigest.getInstance("SHA-256");
         byte[] hashedBytes = digest.digest(input.getBytes());
         return Base64.getEncoder().encodeToString(hashedBytes);
+    }
+
+    public static KeyPair generateKeys() throws Exception {
+        String curveName = "secp256r1";
+        KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("EC");
+        ECGenParameterSpec ecGenParameterSpec = new ECGenParameterSpec(curveName);
+        keyPairGenerator.initialize(ecGenParameterSpec);
+        KeyPair keyPair = keyPairGenerator.generateKeyPair();
+        return keyPair;
     }
 }
