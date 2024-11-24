@@ -24,6 +24,22 @@ public class BulletinBoard extends UnicastRemoteObject implements IBulletinBoard
     }
 
     @Override
+    public synchronized void add(int i, String value, String tag, String nonce, String challenge) throws Exception {
+        /*
+            add(i, v, t): Add v,t to the set at cell i: B[i] := B[i] U {<v, t>}
+         */
+        PoW pow = new PoW(this.POW_DIFFICULTY);
+        if (!pow.verifySolution(challenge, nonce)) {
+            throw new SecurityException("Invalid Proof of Work");
+        }
+        if(board.get(i)==null){
+            board.put(i, new HashMap<>());
+        }
+        board.get(i).put(Crypto.hash(tag), value);
+        int d = 0;
+    }
+
+    @Override
     public synchronized String get(int i, String tag) throws Exception {
         /*
             get(i, b): Let t = Beta(b). If v,t B[i] for some value v, return
@@ -41,4 +57,11 @@ public class BulletinBoard extends UnicastRemoteObject implements IBulletinBoard
     public int getSize() throws Exception{
         return size;
     }
+
+    // Return a unique challenge to the client
+    public String requestChallenge() {
+        PoW pow = new PoW(POW_DIFFICULTY);
+        return pow.generateChallenge();
+    }
+
 }

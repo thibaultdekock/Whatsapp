@@ -1,9 +1,6 @@
 package org.example.Form;
 
-import org.example.Bump;
-import org.example.Crypto;
-import org.example.IBulletinBoard;
-import org.example.Message;
+import org.example.*;
 
 import javax.crypto.KeyAgreement;
 import javax.crypto.Mac;
@@ -355,12 +352,18 @@ public class Chat extends JFrame {
             chatArea.append("You: " + message + "\n");
             inputField.setText("");
             inputField.requestFocus();
+
             // Placeholder for secure message sending logic
             int nextIndex = generateIndex();
             String nextTag = generateTag();
             Message msg = new Message(message, nextIndex, nextTag);
             String encryptedMsg = msg.encrypt(secretKey);
-            board.add(index, encryptedMsg, tag);
+
+            String challenge = board.requestChallenge();
+            PoWSolver solver = new PoWSolver();
+            String nonce = solver.solveChallenge(challenge, IBulletinBoard.POW_DIFFICULTY);
+
+            board.add(index, encryptedMsg, tag, nonce, challenge);
             System.out.printf("%s sent msg: %s%n", name, message);
             System.out.println(msg);
             index = nextIndex;
@@ -508,4 +511,5 @@ public class Chat extends JFrame {
     private int generateIndex() throws Exception {
         return random.nextInt(0, board.getSize());
     }
+
 }
