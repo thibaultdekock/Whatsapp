@@ -5,7 +5,10 @@ import org.example.Crypto;
 import org.example.IBulletinBoard;
 import org.example.Message;
 
+import javax.crypto.KeyAgreement;
+import javax.crypto.Mac;
 import javax.crypto.SecretKey;
+import javax.crypto.spec.SecretKeySpec;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
@@ -13,10 +16,12 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.FileWriter;
+import java.nio.charset.StandardCharsets;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.security.*;
+import java.util.Base64;
 import java.util.Random;
 
 public class Chat extends JFrame {
@@ -34,6 +39,8 @@ public class Chat extends JFrame {
     private int index;
     private String tag;
     private Bump bump;
+    private byte[] generatedSecret;
+    private Random random = new Random();
 
     private final String BUMPFILES_PATH = "./bumpfiles/";
 
@@ -322,23 +329,31 @@ public class Chat extends JFrame {
             inputField.setText("");
             inputField.requestFocus();
             // Placeholder for secure message sending logic
-            Message msg = new Message(message, index, tag);
+            int nextIndex = generateIndex();
+            String nextTag = generateTag();
+            Message msg = new Message(message, nextIndex, nextTag);
             String encryptedMsg = msg.encrypt(secretKey);
-            board.add(index, encryptedMsg, Crypto.hash(tag));
+            board.add(index, encryptedMsg, tag);
             System.out.printf("%s sent msg: %s%n", name, message);
-            //TODO: Set new Index and tag and derive SecretKey again
+            System.out.println(msg);
+            index = nextIndex;
+            tag = nextTag;
+            secretKey = Crypto.deriveKey(secretKey, privateKey, bump.publicKey);
         }
     }
 
-    private void receiveMessage() throws Exception {
+    private synchronized void receiveMessage() throws Exception {
         String msg = board.get(bump.index, bump.tag);
         if(msg==null) return;
         //Parse msg
         Message decryptedMsg = Message.decrypt(msg, secretKey);
         chatArea.append("Other: " + decryptedMsg.message + "\n");
         System.out.printf("%s received msg: %s%n", name, decryptedMsg);
-        //TODO: Update bump-Index and bump-tag with the one out of the message
-        // and derive SecretKey again
+        System.out.println(decryptedMsg);
+
+        bump.tag = decryptedMsg.tag;
+        bump.index = decryptedMsg.index;
+        secretKey = Crypto.deriveKey(secretKey, privateKey, bump.publicKey);
     }
 
 
@@ -450,7 +465,6 @@ public class Chat extends JFrame {
     }
 
     private String generateTag() {
-        Random random = new Random();
         StringBuilder stringBuilder = new StringBuilder(50);
         for (int i = 0; i < 50; i++) {
             stringBuilder.append((char)random.nextInt(33, 126));
@@ -458,6 +472,6 @@ public class Chat extends JFrame {
         return stringBuilder.toString();
     }
     private int generateIndex() throws Exception {
-        return (int)(Math.random() * board.getSize());
+        return random.nextInt(0, board.getSize());
     }
 }
