@@ -260,6 +260,30 @@ public class Chat extends JFrame {
         scrollPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_NEVER);   // Hide vertical scrollbar
         scrollPane.setBorder(null);
 
+        // DocumentListener to auto-scroll
+        chatArea.getDocument().addDocumentListener(new javax.swing.event.DocumentListener() {
+            @Override
+            public void insertUpdate(javax.swing.event.DocumentEvent e) {
+                scrollToBottom();
+            }
+
+            @Override
+            public void removeUpdate(javax.swing.event.DocumentEvent e) {
+                scrollToBottom();
+            }
+
+            @Override
+            public void changedUpdate(javax.swing.event.DocumentEvent e) {
+                scrollToBottom();
+            }
+
+            private void scrollToBottom() {
+                SwingUtilities.invokeLater(() -> {
+                    chatArea.setCaretPosition(chatArea.getDocument().getLength());
+                });
+            }
+        });
+
         // Input Area
         JPanel inputPanel = new JPanel(new BorderLayout());
         inputPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
@@ -291,6 +315,9 @@ public class Chat extends JFrame {
                 }
             }
         });
+
+        // Add listener that scrolls down the chat area when new messages are added
+
 
         // Allow "Enter" key to send messages
         inputField.addActionListener(new ActionListener() {
@@ -344,14 +371,18 @@ public class Chat extends JFrame {
 
     private void receiveMessage() throws Exception {
         String msg = board.get(bump.index, bump.tag);
-        if(msg==null) return;
-        //Parse msg
-        Message decryptedMsg = Message.decrypt(msg, secretKey);
-        chatArea.append(String.format("%s: %s%n", otherUser, decryptedMsg.message));
+        while (msg != null){
+            //Parse msg
+            Message decryptedMsg = Message.decrypt(msg, secretKey);
+            chatArea.append(String.format("%s: %s%n", otherUser, decryptedMsg.message));
 
-        bump.tag = decryptedMsg.tag;
-        bump.index = decryptedMsg.index;
-        secretKey = Crypto.deriveKey(secretKey, privateKey, bump.publicKey);
+            bump.tag = decryptedMsg.tag;
+            bump.index = decryptedMsg.index;
+            secretKey = Crypto.deriveKey(secretKey, privateKey, bump.publicKey);
+
+            // Check for more messages
+            msg = board.get(bump.index, bump.tag);
+        }
     }
 
 
