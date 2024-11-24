@@ -7,7 +7,7 @@ public class Server {
     public static void main(String[] args) {
         try {
             Registry registry = LocateRegistry.createRegistry(1099);
-            BulletinBoard board = new BulletinBoard(2);
+            BulletinBoard board = new BulletinBoard(1000);
             registry.rebind("BulletinBoard", board);
             System.out.println("Server started");
         } catch (Exception e) {

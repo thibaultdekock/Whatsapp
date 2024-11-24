@@ -3,6 +3,7 @@ package org.example;
 import javax.crypto.SecretKey;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 
 public class Message {
     public String message;
@@ -16,20 +17,24 @@ public class Message {
     }
 
     private byte[] toByteArray(){
-        return ByteBuffer.allocate(4 + message.length() + tag.length() + 8)
-                .put(ByteBuffer.allocate(4).putInt(message.length()).array())
-                .put(message.getBytes(StandardCharsets.UTF_8))
-                .put(ByteBuffer.allocate(4).putInt(index).array())
-                .put(ByteBuffer.allocate(4).putInt(tag.length()).array())
-                .put(tag.getBytes(StandardCharsets.UTF_8)).array();
+        byte[] msgBytes = message.getBytes(StandardCharsets.UTF_8);
+        byte[] tagBytes = tag.getBytes(StandardCharsets.UTF_8);
+        return ByteBuffer.allocate(4 + msgBytes.length + 4 + 4 + tagBytes.length)
+                .putInt(msgBytes.length)
+                .put(msgBytes)
+                .putInt(index)
+                .putInt(tagBytes.length)
+                .put(tagBytes)
+                .array();
     }
     public String encrypt(SecretKey key) throws Exception {
         byte[] buf = toByteArray();
-        return Crypto.encrypt(new String(buf, StandardCharsets.UTF_8), key);
+        return Crypto.encrypt(Base64.getEncoder().encodeToString(buf), key);
     }
 
     public static Message decrypt(String encryptedText, SecretKey key) throws Exception {
-        byte[] decryptedMsg = Crypto.decrypt(encryptedText, key).getBytes(StandardCharsets.UTF_8);
+        String decrypted = Crypto.decrypt(encryptedText, key);
+        byte[] decryptedMsg = Base64.getDecoder().decode(decrypted);
         int msgLength = readInt(decryptedMsg, 0);
         String msg = readString(decryptedMsg, 4, msgLength);
         int index = readInt(decryptedMsg, 4+msgLength);
@@ -39,8 +44,7 @@ public class Message {
     }
 
     private static int readInt(byte[] buffer, int offset){
-        return (buffer[offset] << 24) | (buffer[offset+1] << 16) |
-                (buffer[offset+2] << 8) | (buffer[offset+3]);
+        return ByteBuffer.wrap(buffer, offset, 4).getInt();
     }
 
     private static String readString(byte[] buffer, int offset, int length){

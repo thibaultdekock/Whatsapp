@@ -19,7 +19,7 @@ public class BulletinBoard extends UnicastRemoteObject implements IBulletinBoard
         if(board.get(i)==null){
             board.put(i, new HashMap<>());
         }
-        board.get(i).put(tag, value);
+        board.get(i).put(Crypto.hash(tag), value);
         int d = 0;
     }
 
@@ -29,8 +29,6 @@ public class BulletinBoard extends UnicastRemoteObject implements IBulletinBoard
             get(i, b): Let t = Beta(b). If v,t B[i] for some value v, return
             v and remove v,t from B[i]. Otherwise return , and
             leave B[i] unchanged.
-
-            let tag = Beta(b) buitenaf doen tag meegeven als parameter.
          */
         String hashedTag = Crypto.hash(tag);
         HashMap<String, String> set = board.get(i);
