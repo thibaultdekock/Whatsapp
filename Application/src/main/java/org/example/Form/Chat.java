@@ -39,7 +39,7 @@ public class Chat extends JFrame {
     private int index;
     private String tag;
     private Bump bump;
-    private byte[] generatedSecret;
+    private String otherUser;
     private Random random = new Random();
 
     private final String BUMPFILES_PATH = "./bumpfiles/";
@@ -342,12 +342,12 @@ public class Chat extends JFrame {
         }
     }
 
-    private synchronized void receiveMessage() throws Exception {
+    private void receiveMessage() throws Exception {
         String msg = board.get(bump.index, bump.tag);
         if(msg==null) return;
         //Parse msg
         Message decryptedMsg = Message.decrypt(msg, secretKey);
-        chatArea.append("Other: " + decryptedMsg.message + "\n");
+        chatArea.append(String.format("%s: %s%n", otherUser, decryptedMsg.message));
         System.out.printf("%s received msg: %s%n", name, decryptedMsg);
         System.out.println(decryptedMsg);
 
@@ -456,14 +456,20 @@ public class Chat extends JFrame {
         while (true){
             for (File file: new File(BUMPFILES_PATH).listFiles()) {
                 String fileName = file.getName();
-                if(!fileName.substring(4, fileName.indexOf("$")).equals(name.toLowerCase())){
+                String username = fileName.substring(4, fileName.indexOf("$"));
+                int id = Integer.parseInt(fileName.substring(fileName.indexOf("$")+1, fileName.indexOf(".txt")));
+                System.out.println(id);
+                if(!username.equals(name.toLowerCase())){
+                    otherUser = username;
+                    return file;
+                } else if(username.equals(name.toLowerCase()) && id!=index){
+                    otherUser = username;
                     return file;
                 }
             }
             Thread.sleep(1000);
         }
     }
-
     private String generateTag() {
         StringBuilder stringBuilder = new StringBuilder(50);
         for (int i = 0; i < 50; i++) {

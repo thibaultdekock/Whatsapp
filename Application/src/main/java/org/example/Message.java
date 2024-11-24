@@ -19,7 +19,7 @@ public class Message {
     private byte[] toByteArray(){
         byte[] msgBytes = message.getBytes(StandardCharsets.UTF_8);
         byte[] tagBytes = tag.getBytes(StandardCharsets.UTF_8);
-        return ByteBuffer.allocate(4 + msgBytes.length + 4 + 4 + tagBytes.length)
+        return ByteBuffer.allocate(12 + msgBytes.length + tagBytes.length)
                 .putInt(msgBytes.length)
                 .put(msgBytes)
                 .putInt(index)
