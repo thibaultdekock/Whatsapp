@@ -348,8 +348,6 @@ public class Chat extends JFrame {
         //Parse msg
         Message decryptedMsg = Message.decrypt(msg, secretKey);
         chatArea.append(String.format("%s: %s%n", otherUser, decryptedMsg.message));
-        System.out.printf("%s received msg: %s%n", name, decryptedMsg);
-        System.out.println(decryptedMsg);
 
         bump.tag = decryptedMsg.tag;
         bump.index = decryptedMsg.index;
@@ -458,7 +456,6 @@ public class Chat extends JFrame {
                 String fileName = file.getName();
                 String username = fileName.substring(4, fileName.indexOf("$"));
                 int id = Integer.parseInt(fileName.substring(fileName.indexOf("$")+1, fileName.indexOf(".txt")));
-                System.out.println(id);
                 if(!username.equals(name.toLowerCase())){
                     otherUser = username;
                     return file;
