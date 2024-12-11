@@ -343,8 +343,8 @@ public class Chat extends JFrame {
             inputField.setText("");
             inputField.requestFocus();
             // Placeholder for secure message sending logic
+            initialized = true;
         }
-        initialized = true;
     }
     private void sendMessage() throws Exception {
         String message = inputField.getText().trim();
